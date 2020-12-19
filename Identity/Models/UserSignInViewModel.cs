@@ -14,5 +14,7 @@ namespace Identity.Models
         [Display(Name = "Şifre:")]
         [Required(ErrorMessage = "Şifre boş geçilemez")]
         public string Password { get; set; }
+
+        public bool RememberMe { get; set; }
     }
 }

@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Identity.CustomValidator;
 
 namespace Identity
 {
@@ -25,8 +26,23 @@ namespace Identity
                 opt.Password.RequireUppercase = false;
                 opt.Password.RequireNonAlphanumeric = false;
                 opt.Password.RequiredLength = 1;
-            }).AddEntityFrameworkStores<EgitimContext>();
+                opt.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
+                opt.Lockout.MaxFailedAccessAttempts = 3;
+            }).AddErrorDescriber<CustomIdentityValidator>
+            ().AddPasswordValidator<CustomPasswordValidator>
+            ().AddEntityFrameworkStores<EgitimContext>();
             services.AddControllersWithViews();
+
+            services.ConfigureApplicationCookie(opt => 
+            {
+                opt.LoginPath = new PathString("/Home/Index");
+                opt.Cookie.HttpOnly = true;
+                opt.Cookie.Name = "CourseCookie";
+                opt.Cookie.SameSite = SameSiteMode.Strict;
+                opt.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                opt.ExpireTimeSpan = TimeSpan.FromDays(20);
+
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -37,8 +53,11 @@ namespace Identity
                 app.UseDeveloperExceptionPage();
             }
 
+
             app.UseRouting();
             app.UseStaticFiles();
+            app.UseAuthentication();
+            app.UseAuthorization();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapDefaultControllerRoute();
