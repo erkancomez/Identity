@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace Identity.Controllers
 {
+    [AutoValidateAntiforgeryToken]
     public class HomeController : Controller
     {
         private readonly UserManager<AppUser> _userManager;
@@ -23,6 +24,7 @@ namespace Identity.Controllers
             return View(new UserSignInViewModel());
         }
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GirisYap(UserSignInViewModel model)
         {
             if (ModelState.IsValid)
@@ -43,8 +45,15 @@ namespace Identity.Controllers
                 {
                     return RedirectToAction("Index", "Panel");
                 }
+                if (identityResult.IsNotAllowed)
+                {
+                    ModelState.AddModelError("", "Email adresinizi lütfen doğrulayınız.");
+                    return View("Index", model);
+                }
                 var yanlisSayisi = await _userManager.GetAccessFailedCountAsync(await _userManager.FindByNameAsync(model.UserName));
                 ModelState.AddModelError("", $"Kullanıcı adı ya da şifre hatalı {3-yanlisSayisi} kadar yanlış girerseniz hesabınız bloklanacak");
+               
+
                 
             }
             return View("Index", model);
@@ -80,6 +89,10 @@ namespace Identity.Controllers
                 }
             }
             return View(model);
+        }
+        public IActionResult AccessDenied()
+        {
+            return View();
         }
     }
 

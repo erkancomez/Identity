@@ -28,14 +28,16 @@ namespace Identity
                 opt.Password.RequiredLength = 1;
                 opt.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
                 opt.Lockout.MaxFailedAccessAttempts = 3;
+                opt.SignIn.RequireConfirmedEmail = false;
             }).AddErrorDescriber<CustomIdentityValidator>
             ().AddPasswordValidator<CustomPasswordValidator>
             ().AddEntityFrameworkStores<EgitimContext>();
-            services.AddControllersWithViews();
 
-            services.ConfigureApplicationCookie(opt => 
+
+            services.ConfigureApplicationCookie(opt =>
             {
                 opt.LoginPath = new PathString("/Home/Index");
+                opt.AccessDeniedPath = new PathString("/Home/AccessDenied");
                 opt.Cookie.HttpOnly = true;
                 opt.Cookie.Name = "CourseCookie";
                 opt.Cookie.SameSite = SameSiteMode.Strict;
@@ -43,6 +45,9 @@ namespace Identity
                 opt.ExpireTimeSpan = TimeSpan.FromDays(20);
 
             });
+
+            services.AddAuthorization(opt => { opt.AddPolicy("FemalePolicy", cnf => { cnf.RequireClaim("gender", "female"); }); });
+            services.AddControllersWithViews();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
